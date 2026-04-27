@@ -1,7 +1,7 @@
 # Emulator config
 Host: "127.0.0.1"
-Port: 5037
-Name: "emulator-5554"
+Port: 5575
+Name: "127.0.0.1:5575"
 
 # Game resource config
 Gold_min: 0
