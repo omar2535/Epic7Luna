@@ -1,6 +1,4 @@
 import random
-from Epic7Luna.utils.image_utils import find_buy_confirm
-
 
 # refresh shop confirm
 def refresh_confirm(device):
