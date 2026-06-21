@@ -1,7 +1,7 @@
 from ppadb.device import Device
-from utils.resource_manager import get_gold_and_gems
-from utils.inputs import scroll_shop, refresh_confirm, purchase_confirm, click_refresh, purchase
 from Epic7Luna.config import config
+from Epic7Luna.utils.resource_manager import get_gold_and_gems
+from Epic7Luna.utils.inputs import scroll_shop, refresh_confirm, purchase_confirm, click_refresh, purchase
 from Epic7Luna.utils.image_utils import find_covenant_bookmarks, find_mystic_bookmarks, find_friendship_bookmarks, take_screenshot
 
 
@@ -9,22 +9,19 @@ import time
 
 
 class RefreshSecretShop:
-    num_covenant_purchases = 0
-    num_mystic_purchases = 0
-    num_refreshes = 0
-
     def __init__(self, device: Device):
         self.device = device
+        self.num_covenant_purchases = 0
+        self.num_mystic_purchases = 0
+        self.num_friendship_purchases = 0
+        self.num_refreshes = 0
 
     def refresh(self, device: Device):
-        mystics_seen = 0
-        covenants_seen = 0
-
         print(f"---Starting shop refresher. MIN_GEMS: {config.GEMS_MIN}, MIN_GOLD: {config.GOLD_MIN} ---")
 
         while True:
             # check top of shop
-            self.check_for_bookmarks_and_purchase(device, covenants_seen, mystics_seen)
+            self.check_for_bookmarks_and_purchase(device)
 
             # scroll down to bottom of shop
             time.sleep(0.3)
@@ -32,7 +29,7 @@ class RefreshSecretShop:
             time.sleep(0.3)
 
             # check bottom of shop
-            self.check_for_bookmarks_and_purchase(device, covenants_seen, mystics_seen)
+            self.check_for_bookmarks_and_purchase(device)
 
             # sleep for a bit before refreshing
             time.sleep(0.3)
@@ -53,7 +50,7 @@ class RefreshSecretShop:
 
         print("---Program complete---")
 
-    def check_for_bookmarks_and_purchase(self, device, covenants_seen: int, mystics_seen: int):
+    def check_for_bookmarks_and_purchase(self, device):
         time.sleep(1)
         take_screenshot(device)
         covenant_bookmarks_location = find_covenant_bookmarks()
@@ -73,6 +70,7 @@ class RefreshSecretShop:
             purchase(device, friendship_bookmarks_location[1])
             time.sleep(0.1)
             purchase_confirm(device)
+            self.num_friendship_purchases += 1
 
     def is_resource_count_above_threshold(self):
         try:
@@ -88,10 +86,35 @@ class RefreshSecretShop:
     def update_stats_file(self):
         """Updates the stats file with the current number of purchases and refreshes.
         """
-        f = open("stats.txt", "w")
-        f.write(f"Num covenant bookmarks: {self.num_covenant_purchases}, Covenant bookmarks purchased: {self.num_covenant_purchases * 5}\n")
-        f.write(f"Num mystic bookmarks: {self.num_mystic_purchases}, Mystic bookmarks purchased: {self.num_mystic_purchases * 50}\n")
-        f.write(f"Num refreshes: {self.num_refreshes}, Skystones spent: {self.num_refreshes * 3}\n")
-        f.write(f"Covernant rate: {round(float(self.num_covenant_purchases) / float(self.num_refreshes) * 100, 2)}%\n")
-        f.write(f"Mystic rate: {round(float(self.num_mystic_purchases) / float(self.num_refreshes) * 100, 2)}%\n")
-        f.close()
+        stats = "\n".join(self.get_stats_lines()) + "\n"
+
+        with open("stats.txt", "w") as f:
+            f.write(stats)
+
+        print(self.get_stats_line())
+
+    def get_stats_lines(self):
+        """Builds the stats summary for file output."""
+        covenant_rate = self.get_purchase_rate(self.num_covenant_purchases)
+        mystic_rate = self.get_purchase_rate(self.num_mystic_purchases)
+        friendship_rate = self.get_purchase_rate(self.num_friendship_purchases)
+
+        return [
+            f"Num covenant purchases: {self.num_covenant_purchases}, Covenant bookmarks purchased: {self.num_covenant_purchases * 5}",
+            f"Num mystic purchases: {self.num_mystic_purchases}, Mystic bookmarks purchased: {self.num_mystic_purchases * 50}",
+            f"Num friendship purchases: {self.num_friendship_purchases}",
+            f"Num refreshes: {self.num_refreshes}, Skystones spent: {self.num_refreshes * 3}",
+            f"Covenant rate: {covenant_rate}%",
+            f"Mystic rate: {mystic_rate}%",
+            f"Friendship rate: {friendship_rate}%",
+        ]
+
+    def get_stats_line(self):
+        """Builds the stats summary for console printing."""
+        return " | ".join(self.get_stats_lines())
+
+    def get_purchase_rate(self, num_purchases: int) -> float:
+        if self.num_refreshes == 0:
+            return 0.0
+
+        return round(float(num_purchases) / float(self.num_refreshes) * 100, 2)
