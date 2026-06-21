@@ -56,6 +56,18 @@ def find_mystic_bookmarks() -> tuple:
         return 0, 0
     return result.left + result.width / 2, result.top + result.height * 3 / 4
 
+# returns x and y cordinates
+# of friendship bookmarks location on the screen
+def find_friendship_bookmarks() -> tuple:
+    try:
+        result = pyautogui.locate(
+            "matches/friendship_bookmarks.png", "screenshots/screen.png", confidence=0.8
+        )
+        if result is None:
+            return 0, 0
+    except pyautogui.ImageNotFoundException:
+        return 0, 0
+    return result.left + result.width / 2, result.top + result.height * 3 / 4
 
 def find_purchase_covenant() -> tuple:
     """Finds the purchase covenant button on the screen.

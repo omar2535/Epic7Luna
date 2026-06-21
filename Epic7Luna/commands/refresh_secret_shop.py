@@ -2,7 +2,7 @@ from ppadb.device import Device
 from utils.resource_manager import get_gold_and_gems
 from utils.inputs import scroll_shop, refresh_confirm, purchase_confirm, click_refresh, purchase
 from Epic7Luna.config import config
-from Epic7Luna.utils.image_utils import find_covenant_bookmarks, find_mystic_bookmarks, take_screenshot
+from Epic7Luna.utils.image_utils import find_covenant_bookmarks, find_mystic_bookmarks, find_friendship_bookmarks, take_screenshot
 
 
 import time
@@ -58,6 +58,7 @@ class RefreshSecretShop:
         take_screenshot(device)
         covenant_bookmarks_location = find_covenant_bookmarks()
         mystic_bookmarks_location = find_mystic_bookmarks()
+        friendship_bookmarks_location = find_friendship_bookmarks()
         if covenant_bookmarks_location != (0, 0):
             purchase(device, covenant_bookmarks_location[1])
             time.sleep(0.1)
@@ -68,6 +69,10 @@ class RefreshSecretShop:
             time.sleep(0.1)
             purchase_confirm(device)
             self.num_mystic_purchases += 1
+        if friendship_bookmarks_location != (0, 0):
+            purchase(device, friendship_bookmarks_location[1])
+            time.sleep(0.1)
+            purchase_confirm(device)
 
     def is_resource_count_above_threshold(self):
         try:
